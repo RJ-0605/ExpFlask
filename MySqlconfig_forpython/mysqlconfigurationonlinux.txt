@@ -1,0 +1,57 @@
+
+Use the following pip command to install MySQL Connector python.
+
+pip install mysql-connector-python
+
+
+Use the 
+
+ >>mysql.connector.connect() 
+
+  method of MySQL Connector Python with required parameters to connect MySQL.
+
+Use the connection object returned by a  
+
+>>connect()  
+
+method to create a cursor object to perform Database Operations.
+
+
+The 
+>>cursor.execute() 
+
+to execute SQL queries from Python.
+
+Close the Cursor object using a 
+>>cursor.close() 
+
+and MySQL database connection using
+ 
+>>connection.close() 
+
+after your work completes.
+
+$ sudo mysql -u root -p
+
+$ ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'new-password';
+
+$  sudo service mysql stop
+$  sudo service mysql start
+
+
+
+make sure you include the new username and new password when connecting to my sql on your machine 
+
+Remember that if you use option #2 you'll have to connect to mysql as your system username 
+
+(mysql -u YOUR_SYSTEM_USER)
+
+
+
+
+use this to display users and their plugins
+
+$ sudo mysql -u root # I had to use "sudo" since is new installation
+
+mysql> USE mysql;
+mysql> SELECT User, Host, plugin FROM mysql.user;

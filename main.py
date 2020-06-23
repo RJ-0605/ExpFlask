@@ -1,8 +1,26 @@
 from flask import Flask, redirect, url_for, request, render_template
 from validatorex import Register_validator , Login_validator
 
+from flask_mysqldb import MySQL
+
 
 app = Flask(__name__)
+
+# code for starting xampp  sudo /opt/lampp/lampp start
+# 
+# Database of MySQl with flask
+app.config['MYSQL_HOST']='localhost'
+app.config['MYSQL_USER']='jedidiah'
+app.config['MYSQL_PASSWORD']=''
+app.config['MySQL_DB']='myfirstdatabase'
+app.config['MYSQL_CURSORCLASS']='DictCursor'
+
+mysql=MySQL(app)
+
+
+
+
+
 
 posts = [
 	{'author':'Corey Schafer',
@@ -78,14 +96,15 @@ def success(name):
 
 # this will load future validator functions when the validator class 
 # on seperate python script has been imported here
-
+   
 @app.route('/regfunc',methods = ['POST', 'GET'])
 def regload():
+   msg=''
    if request.method == 'POST':
 
       firstname = request.form.get('fname')
       lastname = request.form.get('lname')
-      username = request.form.get('username')
+      username = str(request.form.get('username'))
       email = str(request.form.get('email')).lower()
       passwd = request.form.get('password')
       confirm_passwd = request.form.get('confirm_password')
@@ -96,10 +115,33 @@ def regload():
      # now we can access the function since the instance has been set 
       if validated.validator():
 
-         return render_template("index.html",post_variable=posts, reg_username=username)
+         # now about to crosscheck if username and email , data does not already exist in database before proceeding 
+         cursor = mysql.connection.cursor()
+         cursor.execute('USE myfirstdatabase')
+         cursor.execute( 'SELECT * FROM  RegisterAccount WHERE username=%s  AND email=%s' , ( username , email,))
+         account=cursor.fetchone()
+         if account :
+
+
+            msg=f"This account {username} already exist"
+         
+            # return redirect(url_for('register', reg_username=msg))
+
+            return msg
+
+            # else if there was no successful retrieval that means that information does not exist so we can add new input to the RegisterAccount
+         else:
+            msg=f"Account {username} created successfully "
+            
+            return msg
+
+         
 
       else:
-         return False
+         msg = "Please fill out form "
+         return redirect(url_for('register', reg_username=msg))
+         
+      return render_template("index.html",post_variable=posts, reg_username=msg)
 
 
 

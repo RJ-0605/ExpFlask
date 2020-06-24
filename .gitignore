@@ -1,0 +1,7 @@
+# ignore cache files generated from running python code 
+
+
+* __pycache__/
+
+*.__pycache__
+ 

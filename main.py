@@ -9,10 +9,34 @@ app = Flask(__name__)
 # code for starting xampp  sudo /opt/lampp/lampp start
 # 
 # Database of MySQl with flask
+
+
+#    these configurations helped with connecting xampp mysql server
+#     with flask-mysqldb 
+
+#  app.config['MYSQL_UNIX_SOCKET']='/opt/lampp/var/mysql/mysql.sock'    
+#  app.config['MYSQL_PORT']=3306
+
+
+#     Now all the SUPER USERS can be used interchangeably 
+
+#     both this 
+
+#     app.config['MYSQL_USER']='root'
+#            and 
+#     app.config['MYSQL_USER']='jedidiah'
+
+#  as they are all using the xampp database
+#  because of the socket provided
+
+
+
+app.config['MYSQL_UNIX_SOCKET']='/opt/lampp/var/mysql/mysql.sock'
 app.config['MYSQL_HOST']='localhost'
-app.config['MYSQL_USER']='jedidiah'
+app.config['MYSQL_PORT']=3306
+app.config['MYSQL_USER']='root'
 app.config['MYSQL_PASSWORD']=''
-app.config['MySQL_DB']='myfirstdatabase'
+app.config['MYSQL_DB']='firstdatabase'
 app.config['MYSQL_CURSORCLASS']='DictCursor'
 
 mysql=MySQL(app)
@@ -116,14 +140,23 @@ def regload():
       if validated.validator():
 
          # now about to crosscheck if username and email , data does not already exist in database before proceeding 
-         cursor = mysql.connection.cursor()
-         cursor.execute('USE myfirstdatabase')
-         cursor.execute( 'SELECT * FROM  RegisterAccount WHERE username=%s  AND email=%s' , ( username , email,))
-         account=cursor.fetchone()
-         if account :
+         cur = mysql.connection.cursor()
+
+         # cur.execute('USE myfirstdatabase')
+
+         cur.execute( 'SELECT * FROM  RegisterAccount WHERE username=%s  AND email=%s' , ( username , email,))
+         account=cur.fetchone()
+
+         cur.execute( 'SELECT * FROM  RegisterAccount WHERE username=%s ', ( username , ))
+         uaccount=cur.fetchone()
+
+         cur.execute( 'SELECT * FROM  RegisterAccount WHERE  email=%s' , (  email,))
+         eaccount=cur.fetchone()
+
+         if account or uaccount or eaccount :
 
 
-            msg=f"This account {username} already exist"
+            msg=f"An account with this username  {username} or email {email} already exists"
          
             # return redirect(url_for('register', reg_username=msg))
 
@@ -131,6 +164,18 @@ def regload():
 
             # else if there was no successful retrieval that means that information does not exist so we can add new input to the RegisterAccount
          else:
+
+            sql = "INSERT INTO RegisterAccount (firstname,lastname,username,email,password)VALUES (%s, %s , %s,%s,%s)"
+
+            val=(firstname,lastname,username,email,passwd)
+
+            cur.execute(sql, val)
+
+            mysql.connection.commit()
+
+            print(cur.rowcount, "record inserted.")
+
+
             msg=f"Account {username} created successfully "
             
             return msg
@@ -145,28 +190,63 @@ def regload():
 
 
 
+
+
 @app.route('/loginfunc',methods = ['POST'])
 def loginload():
    if request.method == 'POST':
 
-      username = request.form.get('username')
-      email = str(request.form.get('email')).lower()
+      usernamemail = str(request.form.get('usernam_email')).lower()
+      
       passwd = request.form.get('password')
 
-      print("WORKS",username, email, passwd)
+      # print("WORKS",usernamemail, passwd)
 
       # we create a temporal  instance that can store the results from the validorex script  
-      validated = Login_validator(username,email,passwd) 
+      validateduseremail = Login_validator(usernamemail,passwd) 
+
+      
       
      # now we can access the function since the instance has been set 
-      if validated.validator():
+      if validateduseremail.validator():
+         cur = mysql.connection.cursor()
 
-         return render_template("index.html",post_variable=posts, login_username=username)
+         # cur.execute('USE myfirstdatabase')
+
+         # try fetching  from either username also try fetching from email , usernamemail in general refers to input that can hold both email    
+	 # and    username 
+	 # per what is given as an input 
+
+         cur.execute( 'SELECT * FROM  RegisterAccount WHERE username=%s OR email=%s' , ( usernamemail , usernamemail, )  )
+         ueaccount=cur.fetchone() 
+
+         
+
+         cur.execute( 'SELECT * FROM  RegisterAccount WHERE  password=%s' , (  passwd,))
+         paccount=cur.fetchone()
+
+				
+         if  ueaccount and  paccount:
+            cur.execute( 'SELECT username FROM  RegisterAccount WHERE username=%s OR email=%s' , ( usernamemail , usernamemail, )  )
+            usnmaccount=cur.fetchone()
+            
+            # the username a key to generate the information 
+            # there because i used Dictcursor property
+            usn=usnmaccount['username']
+
+            return render_template("index.html",post_variable=posts, login_username=usn)
+
+         else:
+            msg= "invalid login details "
+
+
 
       else:
-         return "invalid login"
 
-   return "works"
+         # this is thrown because of the LoginVlidator in validatorex
+         msg= "invalid login syntax"
+
+   return msg
 
 
 

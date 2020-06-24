@@ -25,14 +25,18 @@ class Register_validator:
 
 class Login_validator:
 
-    def __init__(self,username,email,passwd):
-        self.email = email
-        self.passwd = passwd  
-        self.username=username
 
+
+    def __init__(self,usernmemail,passwd):
+        
+        self.usernmemail=usernmemail
+        self.passwd = passwd  
+        
+# in the near future i would pass the regex checks here or in the main.py 
+# since i have taken that funcitonatlity away by distorting the input type in the html 
 
     def validator(self):
-        if  self.username and self.passwd and  self.email != "":
+        if  self.usernmemail and self.passwd != "":
             print('Meets all requirements')
             return True
         else:
